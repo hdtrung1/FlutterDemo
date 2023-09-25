@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_demo/authen/auth_repo.dart';
@@ -20,7 +21,7 @@ class LoginView extends StatelessWidget {
         ),
         child: Stack(
           alignment: Alignment.bottomCenter,
-          children: [_loginForm(), _showRegisterButton()],
+          children: [_loginForm(), _showRegisterButton(context)],
         ),
       ),
     );
@@ -43,10 +44,8 @@ class LoginView extends StatelessWidget {
                 ),
                 const SizedBox(height: 20.0),
                 _usernameField(),
-
                 const SizedBox(height: 20.0),
                 _passwordField(),
-
                 const SizedBox(height: 10.0),
                 Align(
                   alignment: Alignment.centerRight,
@@ -56,12 +55,11 @@ class LoginView extends StatelessWidget {
                       'Forgot password?',
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 12.0, 
+                        fontSize: 12.0,
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20.0),
                 _loginButton(),
               ],
@@ -100,44 +98,55 @@ class LoginView extends StatelessWidget {
   }
 
   Widget _loginButton() {
-  return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
-    return state.status is Submitting
-        ? const CircularProgressIndicator()
-        : ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                context.read<LoginBloc>().add(LoginButton());
-              }
-            },
-            style: ButtonStyle(
-              shape: MaterialStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100.0), 
+    return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
+      return state.status is Submitting
+          ? const CircularProgressIndicator()
+          : ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  context.read<LoginBloc>().add(LoginButton());
+                }
+              },
+              style: ButtonStyle(
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100.0),
+                  ),
                 ),
+                backgroundColor:
+                    MaterialStateProperty.all(Colors.deepPurple[400]),
               ),
-              backgroundColor: MaterialStateProperty.all(Colors.deepPurple[400]),
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: const Center(
-                child: Text(
-                  'LOGIN',
-                  style: TextStyle(
-                    color: Colors.white,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: const Center(
+                  child: Text(
+                    'LOGIN',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-  });
-}
+            );
+    });
+  }
 
-  Widget _showRegisterButton() {
+  Widget _showRegisterButton(BuildContext context) {
     return SafeArea(
         child: TextButton(
       child: const Text('Or Sign Up Using'),
-      onPressed: () {},
+      onPressed: () {
+        FirebaseFirestore db = FirebaseFirestore.instance;
+        db
+            .collection("account")
+            .doc("0")
+            .set({"name": "hdtrung", "password": "123456"}).onError(
+                (error, stackTrace) => {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error?.toString()??"")))
+                    });
+      },
     ));
   }
 }
