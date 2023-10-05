@@ -130,6 +130,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_demo/authen/auth_repo.dart';
 import 'package:flutter_demo/authen/login/login_view.dart';
 import 'package:flutter_demo/firebase_options.dart';
+import 'package:flutter_demo/ui/screens/login_screen.dart';
 
 void main() async {
   await Firebase.initializeApp(
@@ -146,7 +147,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: RepositoryProvider(
         create: (context) => AuthRepository(),
-        child: LoginView(),
+        child: LoginScreen(),
       ),
     );
   }
