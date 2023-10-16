@@ -1,70 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_demo/authen/auth_repo.dart';
-import 'package:flutter_demo/blocs/login/login_bloc.dart';
-import 'package:flutter_demo/blocs/login/login_event.dart';
-import 'package:flutter_demo/blocs/login/login_state.dart';
+import 'package:flutter_demo/blocs/login/login_cubit.dart';
 import 'package:flutter_demo/authen/submission_status.dart';
+import 'package:flutter_demo/blocs/login/login_state.dart';
+import 'package:flutter_demo/src/authentication_service.dart';
+import 'package:flutter_demo/ui/screens/registration_screen.dart';
 import 'package:flutter_demo/ui/widgets/custom_button.dart';
 import 'package:flutter_demo/ui/widgets/custom_text_form_field.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
+  // final _emailController = TextEditingController();
+  // final _passwordController = TextEditingController();
 
-  LoginScreen({super.key});
+  LoginScreen({Key? key}) : super(key: key);
+  //final _loginBloc = LoginBloc();
+
+  static MaterialPage page() {
+    return MaterialPage(
+      child: LoginScreen(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocProvider(
-        create: (context) => LoginBloc(
-          authRepo: context.read<AuthRepository>(),
-        ),
-        child: _loginForm(context),
-      ),
-    );
+    return BlocProvider(
+        // body: BlocProvider(
+        //   create: (context) => LoginBloc(
+        //     authRepo: context.read<AuthRepository>(),
+        //   ),
+        create: (context) => LoginCubit(context.read<AuthenticationSerivce>()),
+        child: BlocListener<LoginCubit, LoginState>(
+          listener: (context, state) {
+            if (state.status is SubmissionFailure) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(state.errorMessage!)),
+                );
+            }
+          },
+          child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(children: [
+                Expanded(
+                  child: _loginForm(context),
+                ),
+                _showRegisterButton(context),
+              ])),
+        ));
   }
 
   Widget _loginForm(BuildContext context) {
     return Form(
-        key: _formKey,
-        child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _title(),
-                const SizedBox(height: 20.0),
-
-                _usernameField(),
-                const SizedBox(height: 20.0),
-
-                _passwordField(),
-                const SizedBox(height: 10.0),
-                // Forget Password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 12.0,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20.0),
-
-                _loginButton(),
-
-                _registerIconButton(context),
-
-                _showRegisterButton(context)
-              ],
-            )));
+      key: _formKey,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _title(),
+            const SizedBox(height: 20.0),
+            _emailField(context),
+            const SizedBox(height: 20.0),
+            _passwordField(context),
+            const SizedBox(height: 10.0),
+            _forgotPasswordButton(),
+            const SizedBox(height: 20.0),
+            _loginButton(context),
+            const SizedBox(height: 20.0),
+            _registerIconButton(context),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _title() {
@@ -77,88 +87,149 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _usernameField() {
-    return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
-      return CustomTextFormField(
-        icon: Icons.person,
-        hintText: 'Type your username',
-        validator: (value) => state.isValidUsername ? null : 'Invalid username',
-        onChanged: (value) => context
-            .read<LoginBloc>()
-            .add(LoginUsernameChanged(username: value)),
-      );
-    });
+  Widget _emailField(BuildContext context) {
+    final state = context.watch<LoginCubit>().state;
+    //return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
+    return CustomTextFormField(
+      //controller: _emailController,
+      icon: Icons.email,
+      hintText: 'Type your email',
+      validator: (value) => state.isValidUsername ? null : 'Invalid email',
+      onChanged: context.read<LoginCubit>().onEmailChanged,
+      // onChanged: (value) => context
+      //     .read<LoginBloc>()
+      //     .add(LoginUsernameChanged(username: value)),
+    );
+    //});
   }
 
-  Widget _passwordField() {
-    return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
-      return CustomTextFormField(
-        obscureText: true,
-        icon: Icons.lock,
-        hintText: 'Type your password',
-        validator: (value) => state.isValidPassword ? null : 'Invalid password',
-        onChanged: (value) => context
-            .read<LoginBloc>()
-            .add(LoginPasswordChanged(password: value)),
-      );
-    });
+  Widget _passwordField(BuildContext context) {
+    final state = context.watch<LoginCubit>().state;
+    //return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
+    return CustomTextFormField(
+      //controller: _passwordController,
+      obscureText: true,
+      icon: Icons.lock,
+      hintText: 'Type your password',
+      validator: (value) => state.isValidPassword ? null : 'Invalid password',
+      onChanged: context.read<LoginCubit>().onPasswordChanged,
+      // onChanged: (value) => context
+      //     .read<LoginBloc>()
+      //     .add(LoginPasswordChanged(password: value)),
+    );
+    //});
   }
 
-  Widget _loginButton() {
-    return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
-      return state.status is Submitting
-          ? const CircularProgressIndicator()
-          : CustomButton(
-              text: 'LOGIN',
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  context.read<LoginBloc>().add(LoginButton());
-                }
-              });
-    });
+  Widget _forgotPasswordButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          // Handle forgot password logic
+        },
+        child: const Text(
+          'Forgot password?',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 12.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _loginButton(BuildContext context) {
+    final state = context.watch<LoginCubit>().state;
+    //return BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
+    //context.read<LoginCubit>().state.status == Submitting()
+    return state.status is Submitting
+        ? const CircularProgressIndicator()
+        : CustomButton(
+            text: 'LOGIN',
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                context.read<LoginCubit>().onLoginWithEmailAndPasswordPressed();
+              }
+            });
+    //   if (state.status is Submitting) {
+    //     // when submitting
+    //     // Hiển thị một loại tiến trình nào đó khi đang submitting
+    //     return const CircularProgressIndicator();
+    //   } else if (state.status is SubmissionSuccess) {
+    //     // when user login successfully
+    //     // Xử lý khi đăng nhập thành công
+    //     Navigator.push(context, MaterialPageRoute(builder: (context) {
+    //       return const Scaffold(
+    //         body: Center(
+    //           child: Text("Success"),
+    //         ),
+    //       );
+    //     }));
+    //   } else if (state.status is SubmissionFailure) {
+    //     // Xử lý khi đăng nhập thất bại, có thể hiển thị thông báo lỗi
+    //     // when user login unsuccessfully, pop up an error noti
+    //     final error = (state.status as SubmissionFailure).exception;
+    //     return Text("Login failed: $error");
+    //   } else {
+    //     // Hiển thị nút đăng nhập bình thường
+    //     return CustomButton(
+    //       text: 'LOGIN',
+    //       onPressed: () {
+    //         if (_formKey.currentState!.validate()) {
+    //           // Gửi sự kiện LoginButton để bắt đầu quá trình đăng nhập
+    //           context.read<LoginBloc>().add(LoginButton());
+    //         }
+    //       },
+    //     );
+    //   }
+    //   return const SizedBox();
+    // });
   }
 
   Widget _registerIconButton(BuildContext context) {
-    return Row(
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            ('Or Sign Up Using'),
+          Text(
+            'Or Sign Up Using',
             style: TextStyle(fontSize: 16),
           ),
-          const SizedBox(width: 10),
-          
-          InkWell(   
-            onTap: () {
-              
-            },
-            splashColor: Colors.grey.withOpacity(0.3),            
-            highlightColor: Colors.grey.withOpacity(0.3),
-            child: Image.asset('/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/facebook_logo.png', width: 30, height: 30),  
-          ),
-          
-          const SizedBox(width: 10),
-
-          InkWell(   
-            onTap: () {
-              
-            },
-            splashColor: Colors.grey.withOpacity(0.3),            
-            highlightColor: Colors.grey.withOpacity(0.3),
-            child: Image.asset('/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/x_logo.png', width: 30, height: 30),  
-          ),
-          
-          const SizedBox(width: 10),
-
-          InkWell(   
-            onTap: () {
-              
-            },
-            splashColor: Colors.grey.withOpacity(0.3),            
-            highlightColor: Colors.grey.withOpacity(0.3),
-            child: Image.asset('/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/gmail_logo.png', width: 30, height: 30),  
-          ),
-        ]);
+          SizedBox(width: 10),
+        ],
+      ),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        InkWell(
+          onTap: () {},
+          splashColor: Colors.grey.withOpacity(0.3),
+          highlightColor: Colors.grey.withOpacity(0.3),
+          child: Image.asset(
+              '/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/facebook_logo.png',
+              width: 30,
+              height: 30),
+        ),
+        const SizedBox(width: 10),
+        InkWell(
+          onTap: () {},
+          splashColor: Colors.grey.withOpacity(0.3),
+          highlightColor: Colors.grey.withOpacity(0.3),
+          child: Image.asset(
+              '/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/x_logo.png',
+              width: 25,
+              height: 25),
+        ),
+        const SizedBox(width: 10),
+        InkWell(
+          onTap: () {},
+          splashColor: Colors.grey.withOpacity(0.3),
+          highlightColor: Colors.grey.withOpacity(0.3),
+          child: Image.asset(
+              '/Users/trunghoang/code-demo/FlutterDemo/flutter_demo/assets/images/gmail_logo.png',
+              width: 30,
+              height: 30),
+        ),
+      ])
+    ]);
   }
 
   Widget _showRegisterButton(BuildContext context) {
@@ -175,9 +246,17 @@ class LoginScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (context) => RegistrationScreen()));
-            },
+              Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return RegistrationScreen();
+                    }));
+									},
+          
+              // Navigator.push(
+              //     context,
+              //     MaterialPageRoute(
+              //         builder: (context) => RegistrationScreen()));
+            //},
           )
         ]));
   }
