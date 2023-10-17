@@ -1,21 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_demo/src/log_in_email_password_failure.dart';
+import 'package:flutter_demo/src/log_in_with_google_failure.dart';
 import 'package:flutter_demo/src/models/model.dart';
 import 'package:flutter_demo/src/sign_up_with_email_password_failure.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
-class AuthenticationSerivce {
+class AuthenticationService {
   final firebase_auth.FirebaseAuth _firebaseAuth;
-  // final GoogleSignIn _googleSignIn;
+  final GoogleSignIn _googleSignIn;
   // final FacebookAuth _facebookAuth;
   final CacheClient _cacheClient;
 
-  AuthenticationSerivce({
+  AuthenticationService({
     firebase_auth.FirebaseAuth? firebaseAuth,
-    // GoogleSignIn? googleSignIn,
+    GoogleSignIn? googleSignIn,
     // FacebookAuth? facebookAuth,
     CacheClient? cacheClient,
   })  : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-        // _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
         // _facebookAuth = facebookAuth ?? FacebookAuth.instance,
         _cacheClient = cacheClient ?? CacheClient();
 
@@ -63,6 +65,23 @@ class AuthenticationSerivce {
       throw SignUpWithEmailAndPasswordFailure;
     }
   }
+
+  // Đăng nhập với google
+  Future<void> logInWithGoogle() async {
+  try {
+    final googleUser = await _googleSignIn.signIn();
+    final googleAuth = await googleUser?.authentication;
+    final credential = firebase_auth.GoogleAuthProvider.credential(
+      idToken: googleAuth?.idToken,
+      accessToken: googleAuth?.accessToken,
+    );
+    await _firebaseAuth.signInWithCredential(credential);
+  } on firebase_auth.FirebaseException catch (e) {
+    throw LogInWithGoogleFailure.fromCode(e.code);
+  } catch (_) {
+    throw LogInWithGoogleFailure;
+  }
+}
 
   // Đăng xuất tài khoản
   Future<void> signOut() async {

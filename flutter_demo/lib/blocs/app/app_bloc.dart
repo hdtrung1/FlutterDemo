@@ -9,10 +9,10 @@ part 'app_event.dart';
 part 'app_state.dart';
 
 class AppBloc extends Bloc<AppEvent, AppState> {
-  final AuthenticationSerivce _authenticationSerivce;
+  final AuthenticationService _authenticationSerivce;
   late final StreamSubscription<Account> _accountSubscription;
 
-  AppBloc({required AuthenticationSerivce authenticationSerivce})
+  AppBloc({required AuthenticationService authenticationSerivce})
       : _authenticationSerivce = authenticationSerivce,
         super(authenticationSerivce.currentAccount.isNotEmpty
             ? AppState.authenticated(account: authenticationSerivce.currentAccount)

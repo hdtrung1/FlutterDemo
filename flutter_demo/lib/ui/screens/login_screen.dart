@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_demo/blocs/login/login_cubit.dart';
-import 'package:flutter_demo/authen/submission_status.dart';
+import 'package:flutter_demo/submission_status.dart';
 import 'package:flutter_demo/blocs/login/login_state.dart';
 import 'package:flutter_demo/src/authentication_service.dart';
 import 'package:flutter_demo/ui/screens/registration_screen.dart';
@@ -15,8 +15,7 @@ class LoginScreen extends StatelessWidget {
   // final _passwordController = TextEditingController();
 
   LoginScreen({Key? key}) : super(key: key);
-  //final _loginBloc = LoginBloc();
-
+  
   static MaterialPage page() {
     return MaterialPage(
       child: LoginScreen(),
@@ -25,12 +24,17 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-        // body: BlocProvider(
-        //   create: (context) => LoginBloc(
-        //     authRepo: context.read<AuthRepository>(),
-        //   ),
-        create: (context) => LoginCubit(context.read<AuthenticationSerivce>()),
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            // body: BlocProvider(
+            //   create: (context) => LoginBloc(
+            //     authRepo: context.read<AuthRepository>(),
+            //   ),
+            create: (context) =>
+                LoginCubit(context.read<AuthenticationService>()),
+          ),
+        ],
         child: BlocListener<LoginCubit, LoginState>(
           listener: (context, state) {
             if (state.status is SubmissionFailure) {
@@ -146,44 +150,7 @@ class LoginScreen extends StatelessWidget {
         ? const CircularProgressIndicator()
         : CustomButton(
             text: 'LOGIN',
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                context.read<LoginCubit>().onLoginWithEmailAndPasswordPressed();
-              }
-            });
-    //   if (state.status is Submitting) {
-    //     // when submitting
-    //     // Hiển thị một loại tiến trình nào đó khi đang submitting
-    //     return const CircularProgressIndicator();
-    //   } else if (state.status is SubmissionSuccess) {
-    //     // when user login successfully
-    //     // Xử lý khi đăng nhập thành công
-    //     Navigator.push(context, MaterialPageRoute(builder: (context) {
-    //       return const Scaffold(
-    //         body: Center(
-    //           child: Text("Success"),
-    //         ),
-    //       );
-    //     }));
-    //   } else if (state.status is SubmissionFailure) {
-    //     // Xử lý khi đăng nhập thất bại, có thể hiển thị thông báo lỗi
-    //     // when user login unsuccessfully, pop up an error noti
-    //     final error = (state.status as SubmissionFailure).exception;
-    //     return Text("Login failed: $error");
-    //   } else {
-    //     // Hiển thị nút đăng nhập bình thường
-    //     return CustomButton(
-    //       text: 'LOGIN',
-    //       onPressed: () {
-    //         if (_formKey.currentState!.validate()) {
-    //           // Gửi sự kiện LoginButton để bắt đầu quá trình đăng nhập
-    //           context.read<LoginBloc>().add(LoginButton());
-    //         }
-    //       },
-    //     );
-    //   }
-    //   return const SizedBox();
-    // });
+            onPressed: context.read<LoginCubit>().onLoginWithGooglePressed);
   }
 
   Widget _registerIconButton(BuildContext context) {
@@ -246,16 +213,15 @@ class LoginScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return RegistrationScreen();
-                    }));
-									},
-          
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //         builder: (context) => RegistrationScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return RegistrationScreen();
+              }));
+            },
+
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //         builder: (context) => RegistrationScreen()));
             //},
           )
         ]));

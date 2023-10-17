@@ -1,12 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_demo/authen/submission_status.dart';
-
-// enum LoginStatus {
-//   initial,
-//   loading,
-//   success,
-//   failure,
-// }
+import 'package:flutter_demo/submission_status.dart';
 
 class LoginState extends Equatable{
   final String? errorMessage;

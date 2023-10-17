@@ -22,14 +22,11 @@ class HomeScreen extends StatelessWidget {
           children: [
             const SizedBox.square(
               dimension: 100,
-              // child: account.photo != null
-              //     ? Image.network(account.photo!)
-              //     : const Icon(Icons.person),
             ),
             Text(account.id),
 						// Nút đăng xuất
             ElevatedButton(
-              onPressed: context.read<AuthenticationSerivce>().signOut,
+              onPressed: context.read<AuthenticationService>().signOut,
               child: const Text("Log Out"),
             )
           ],

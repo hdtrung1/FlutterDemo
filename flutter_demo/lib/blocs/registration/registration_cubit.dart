@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_demo/authen/submission_status.dart';
+import 'package:flutter_demo/submission_status.dart';
 import 'package:flutter_demo/blocs/registration/registration_state.dart';
 import 'package:flutter_demo/src/authentication_service.dart';
 import 'package:flutter_demo/src/sign_up_with_email_password_failure.dart';
 
 
 class RegistrationCubit extends Cubit<RegistrationState> {
-  final AuthenticationSerivce _authenticationSerivce;
+  final AuthenticationService _authenticationSerivce;
   RegistrationCubit(this._authenticationSerivce) : super(const RegistrationState());
 
   void onEmailChanged(String email) {

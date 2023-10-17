@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_demo/blocs/app/app_bloc.dart';
 import 'package:flutter_demo/src/authentication_service.dart';
-import 'package:flutter_demo/ui/screens/home_screen.dart';
-import 'package:flutter_demo/ui/screens/login_screen.dart';
+import 'package:flutter_demo/ui/screens/screens.dart';
 
 class App extends StatelessWidget {
   const App({
@@ -12,7 +11,7 @@ class App extends StatelessWidget {
     required this.authenticationSerivce,
   }) : super(key: key);
   // Service truyền vào từ main
-  final AuthenticationSerivce authenticationSerivce;
+  final AuthenticationService authenticationSerivce;
 
   @override
   Widget build(BuildContext context) {

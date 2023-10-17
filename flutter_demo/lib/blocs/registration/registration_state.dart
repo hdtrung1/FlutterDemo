@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_demo/authen/submission_status.dart';
+import 'package:flutter_demo/submission_status.dart';
 
 class RegistrationState extends Equatable {
   // final String username;

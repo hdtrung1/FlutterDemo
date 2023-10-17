@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_demo/submission_status.dart';
 import 'package:flutter_demo/blocs/registration/registration_cubit.dart';
-import 'package:flutter_demo/ui/screens/login_screen.dart';
+import 'package:flutter_demo/blocs/registration/registration_state.dart';
+import 'package:flutter_demo/src/authentication_service.dart';
 import 'package:flutter_demo/ui/widgets/custom_button.dart';
 import 'package:flutter_demo/ui/widgets/custom_text_form_field.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,22 +18,47 @@ class RegistrationScreen extends StatelessWidget {
 
   RegistrationScreen({Key? key}) : super(key: key);
 
+  static MaterialPage page() {
+    return MaterialPage(
+      child: RegistrationScreen(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // body: BlocProvider(
-      //   create: (context) => RegisterBloc(
-      //     authRepo: context.read<AuthRepository>(),
-      //   ),
-      body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            Expanded(
-              child: _registrationForm(context),
-            ),
-            _showLoginButton(context),
-          ])),
-    );
+    return MultiBlocProvider(
+        // body: BlocProvider(
+        //   create: (context) => RegisterBloc(
+        //     authRepo: context.read<AuthRepository>(),
+        //   ),
+        providers: [
+          BlocProvider(
+            create: (context) =>
+                RegistrationCubit(context.read<AuthenticationService>()),
+          ),
+        ],
+        child: BlocListener<RegistrationCubit, RegistrationState>(
+          listener: (context, state) {
+            if (state.status is SubmissionFailure) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(state.errorMessage!)),
+                );
+            }
+            if (state.status is SubmissionSuccess) {
+              Navigator.pop(context);
+            }
+          },
+          child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(children: [
+                Expanded(
+                  child: _registrationForm(context),
+                ),
+                _showLoginButton(context),
+              ])),
+        ));
   }
 
   Widget _registrationForm(BuildContext context) {
@@ -109,8 +136,8 @@ class RegistrationScreen extends StatelessWidget {
       icon: Icons.mail,
       hintText: 'Type your email',
       validator: (value) => state.isValidEmail ? null : 'Invalid email',
-      onChanged: context.read<RegistrationCubit>().onPasswordChanged,
-  
+      onChanged: context.read<RegistrationCubit>().onEmailChanged,
+
       //controller: _emailController,
       // onChanged: (value) => context
       //     .read<RegisterBloc>()
@@ -120,47 +147,10 @@ class RegistrationScreen extends StatelessWidget {
   }
 
   Widget _registrationButton(BuildContext context) {
-    // final state = context.watch<RegistrationBloc>().state;
-
-    // return BlocBuilder<RegistrationBloc, RegistrationState>(builder: (context, state) {
-    //   return state.status is Submitting
-    //       ? const CircularProgressIndicator()
-    //       : CustomButton(
     return CustomButton(
-        text: 'SIGN UP',
-        // onPressed: () async {
-        //   if (_formKey.currentState!.validate()) {
-        //     //context.read<RegistrationBloc>().add(RegistrationButton());
-        //     // Fetch info from registration field
-        //     final username = _usernameController.text;
-        //     final email = _emailController.text;
-        //     final password = _passwordController.text;
-
-        //     try {
-        //       // Use Firebase Authentication để đăng ký người dùng
-        //       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        //         email: email,
-        //         password: password,
-        //       );
-
-        //       // Lưu thông tin tài khoản vào Firebase Realtime Database
-        //       // ignore: deprecated_member_use
-        //       final databaseReference = FirebaseDatabase.instance.reference();
-        //       databaseReference.child('users').push().set({
-        //         'username': username,
-        //         'email': email,
-        //         // Thêm các thông tin tùy chỉnh khác nếu cần
-        //       });
-
-        //       // Đăng ký thành công, bạn có thể thực hiện các hành động sau đăng ký
-        //     } catch (e) {
-        //       // Xử lý lỗi đăng ký
-        //       logger.e('Lỗi đăng ký: $e');
-        //     }
-        //   }
-        //}
-        onPressed: context.read<RegistrationCubit>().onSignUpButtonPressed,);
-    //});
+      text: 'SIGN UP',
+      onPressed: context.read<RegistrationCubit>().onSignUpButtonPressed,
+    );
   }
 
   Widget _registrationIconButton(BuildContext context) {
